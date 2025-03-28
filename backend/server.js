@@ -6,6 +6,7 @@ import { Server } from 'socket.io';
 import jwt from 'jsonwebtoken';
 import mongoose from 'mongoose'
 import projectModel from './models/project.model.js'
+import {generateResult} from './services/ai.service.js';
 
 const port = process.env.port || 3000;
 
@@ -42,7 +43,6 @@ io.use( async (socket, next) => { //middleware for socket io to autenticate the 
         }
 
         socket.user = decoded;
-
         next();
 
     } catch (error) {
@@ -52,13 +52,32 @@ io.use( async (socket, next) => { //middleware for socket io to autenticate the 
 
 io.on('connection', socket => { // whenever a new connection(new user connects) is formed with server than this function(callback) will run
     socket.roomId = socket.project._id.toString();
-
     console.log('a user connected');
-
     socket.join(socket.roomId); // joining the room with project id
 
-    socket.on('project-message', data => { // Adds a socket(client) to a room and broadcast the message(coming from client) to all sockets in a specific room.
+    socket.on('project-message', async data => { // Adds a socket(client) to a room and broadcast the message(coming from client) to all sockets in a specific room.
+
+        const message = data.message;
+
+        const aiIsPresentInMessage = message.includes('@ai');
         socket.broadcast.to(socket.roomId).emit('project-message', data); //on broadcasting the message to all the sockets in the room, except the sender will not receive the message.
+
+        
+        if(aiIsPresentInMessage) {
+            const prompt = message.replace('@ai', '');
+            const result = await generateResult(prompt);
+
+            io.to(socket.roomId).emit('project-message', {
+                message: result,
+                sender: {
+                    _id: 'ai',
+                    email: 'AI'
+                }
+            })
+
+        return;
+    }
+
     })
 
     socket.on('disconnect', () => { 

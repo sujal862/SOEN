@@ -1,9 +1,9 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { useLocation } from 'react-router-dom';
 import axios from '../config/axios.jsx';
 import { useUser } from '../context/user.context.jsx'
 import { initializeSocket, receiveMessage, sendMessage } from '../config/socket.jsx';
+import Markdown from 'markdown-to-jsx'
 
 function Project() {
   const location = useLocation();
@@ -16,6 +16,7 @@ function Project() {
   const [message, setMessage] = useState('');
   const { user } = useUser();
   const messageBox = useRef(null);
+  const [messages, setMessages] = useState([]);
 
   useEffect(() => {
     const projectId = location.state.project._id;
@@ -44,8 +45,11 @@ function Project() {
 
       receiveMessage('project-message', data => {
         console.log('Received message', data);
-        appendIncomingMessage(data);
-        scrollToBottom(); // Scroll to bottom when a new message is received
+        setMessages(prev => [...prev, {
+          ...data,
+          type: 'incoming'
+        }]);
+        scrollToBottom();
       });
 
       // Clean up socket connection on unmount
@@ -80,12 +84,16 @@ function Project() {
     if (message.trim() === "") return;
     const messageData = {
       message,
-      sender: user.email
+      sender: user,
+      type: 'outgoing'
     };
+    
     console.log('sending', message);
     sendMessage('project-message', messageData);
-    appendOutgoingMessage(message);
-    scrollToBottom(); 
+    
+    // Add message to state instead of DOM
+    setMessages(prev => [...prev, messageData]);
+    scrollToBottom();
     setMessage('');
   }
 
@@ -96,29 +104,7 @@ function Project() {
     }
   };
 
-  const appendIncomingMessage = (messageObject) => {
 
-    const newMessage = document.createElement('div');
-    newMessage.classList.add('incoming', 'max-w-56', 'flex', 'flex-col', 'p-2', 'mb-2', 'bg-slate-100', 'w-fit', 'rounded-md');
-    newMessage.innerHTML = `
-        <small class="opacity-65 text-xs">${messageObject.sender}</small>
-        <p class="text-sm">${messageObject.message}</p>
-      `;
-
-    messageBox.current.appendChild(newMessage);
-
-  }
-
-  const appendOutgoingMessage = (message) => {
-    const newMessage = document.createElement('div');
-    newMessage.classList.add('outgoing', 'max-w-56', 'ml-auto', 'flex', 'flex-col', 'p-2', 'mb-2', 'bg-slate-100', 'w-fit', 'rounded-md');
-    newMessage.innerHTML = `
-        <small class="opacity-65 text-xs">${user.email}</small>
-        <p class="text-sm">${message}</p>
-      `;
-
-    messageBox.current.appendChild(newMessage);
-  }
 
   return (
     <main className="h-screen w-screen flex">
@@ -149,9 +135,25 @@ function Project() {
           <div className="flex-grow flex flex-col overflow-hidden">
             <div
               ref={messageBox}
-              className="message-box flex-grow overflow-y-auto bg-white border border-gray-300 rounded-md p-2 gap-1"
+              className="message-box flex-grow overflow-y-auto bg-gray-300 border border-gray-300 rounded-md p-2 gap-1"
             >
-              {/* Messages will be appended here */}
+              {messages.map((msg, index) => (
+                <div
+                  key={index}
+                  className={`${msg.type === 'outgoing' ? 'ml-auto' : ''} ${msg.sender._id === 'ai' ? 'max-w-80' : 'max-w-56'} flex flex-col p-2 mb-2 bg-white w-fit rounded-md`}
+                >
+                  <small className="opacity-65 text-xs">
+                    {msg.sender.email}
+                  </small>
+                  {msg.sender._id === 'ai' ? (
+                    <div className="text-sm overflow-auto bg-slate-950 text-white rounded-sm p-2">
+                      <Markdown>{msg.message}</Markdown>
+                    </div>
+                  ) : (
+                    <p className="text-sm">{msg.message}</p>
+                  )}
+                </div>
+              ))}
             </div>
           </div>
 
