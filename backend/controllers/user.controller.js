@@ -33,20 +33,19 @@ export const loginUserController = async (req, res) => {
 
     try {
         const { email, password } = req.body;
-
         const user = await userModel.findOne({ email }).select('+password');
 
         if (!user) {
-            res.status(401).json({
+            return res.status(401).json({
                 errors: 'Invalid credentials'
-            })
+            });
         }
 
         const isValid = await user.isValidPassword(password);
 
         if (!isValid) {
             return res.status(401).json({
-                errors: 'Invali credentials'
+                errors: 'Invalid credentials'
             })
         }
 
@@ -63,9 +62,9 @@ export const loginUserController = async (req, res) => {
 
 export const profileController = async (req, res) => {
      
-    console.log(req.user);
+    const user = await userModel.findOne({ email: req.user.email });
 
-    res.status(200).json(req.user);
+    res.status(200).json(user);
 }
 
 

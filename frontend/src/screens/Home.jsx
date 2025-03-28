@@ -24,7 +24,7 @@ export default function Home() {
     console.log(projectName);
   }
 
-  useEffect(() => { // get all projects of loggen in user
+  useEffect(() => { // get all projects of logged in user
 
     axios.get('/projects/all').then((res) => {
       setProject(res.data.projects);

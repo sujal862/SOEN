@@ -8,7 +8,7 @@ export default function Login() {
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const { setUser } = useUser();
+  const { user, setUser } = useUser();
 
   const navigate = useNavigate();
 
@@ -17,11 +17,8 @@ export default function Login() {
     e.preventDefault();
     axios.post('/users/login', {email, password })
     .then((res) => {
-      console.log(res.data);
-
       localStorage.setItem('token', res.data.token)
       setUser(res.data.user);
-
       navigate('/');
     })
     .catch((err) => {

@@ -13,7 +13,7 @@ export const authUser = async (req, res, next) => {
 
         if (isBlackListed) {
             res.cookie('token', '');
-            return res.status(401).send({ error: 'Unauthorized User' });
+            return res.status(401).send({ error: 'Blacklisted token' });
         }
 
 
