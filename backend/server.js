@@ -62,6 +62,7 @@ io.on('connection', socket => { // whenever a new connection(new user connects) 
     })
 
     socket.on('disconnect', () => { 
+        socket.leave(socket.roomId);
         console.log('User disconnected:', socket.user);
      });
 });
