@@ -5,6 +5,7 @@ import { useUser } from '../context/user.context.jsx'
 import { initializeSocket, receiveMessage, sendMessage } from '../config/socket.jsx';
 import Markdown from 'markdown-to-jsx'
 import hljs from 'highlight.js';
+import { getWebContainer } from '../config/webContainer.js';
 
 function SyntaxHighlightedCode(props) {
   const ref = useRef(null)
@@ -38,6 +39,8 @@ function Project() {
   const [openFiles, setOpenFiles] = useState([]);
   const [fileTree, setFileTree] = useState({});
 
+  const [webContainer, setWebContainer] = useState(null);
+
 
 
 useEffect(() => {
@@ -65,16 +68,26 @@ useEffect(() => {
     // Socket connection
     const socket = initializeSocket(project._id);
 
+    if( !webContainer) {
+      getWebContainer().then(container => {
+        setWebContainer(container);
+        console.log('WebContainer initialized', container);
+      })
+    }
+
+
     receiveMessage('project-message', data => {
+
       if (data.sender._id == 'ai') {
       const parseedMessage =  JSON.parse(data.message);
       console.log('Received message', parseedMessage);
       
+      webContainer?.mount(parseedMessage.fileTree)
       if (parseedMessage.fileTree) {
         setFileTree(parseedMessage.fileTree);
+
       }
       }
-      console.log('Received message', data.message);
       setMessages(prev => [...prev, { ...data, type: 'incoming' }]);
       scrollToBottom();
     });
@@ -249,9 +262,9 @@ return (
     </section>
 
     {/* Right Section */}
-    <section className="right flex flex-grow h-full bg-red-50 overflow-auto">
+    <section className="right flex flex-grow h-full overflow-auto">
 
-      <div className='explorer h-full  max-w-64 min-w-52  bg-slate-200'>
+      <div className='explorer h-full  max-w-64 min-w-52  bg-slate-400'>
         <div className="file-tree w-full h-full">
           {
             Object.keys(fileTree).map((file, index) => (
@@ -275,10 +288,12 @@ return (
         </div>
       </div>
 
-      {currentFile && (
+
         <div className='code-editor flex flex-col flex-grow h-full shrink'>
 
-          <div className="top flex bg-gray-300">
+          <div className="top flex justify-between w-full bg-slate-400">
+
+            <div className="files flex">
             {
               openFiles.map((file, index) => (
                 <button key={index}
@@ -292,6 +307,27 @@ return (
                 </button>
               ))
             }
+            </div>
+
+            <div className="actions flex gap-2">
+              <button
+              onClick={async () => {
+                const lsProcess = await webContainer?.spawn('ls')
+                await webContainer?.mount(fileTree) // this will mount(load) the file tree to the web container
+                lsProcess.output.pipeTo(new WritableStream({
+                    write(chunk) {
+                      console.log('ls output:', chunk);
+                    }
+                }))
+              }}
+              className='p-2 px-4 bg-slate-300 text-white'
+              >
+                ls
+              </button>
+
+            </div>
+
+
           </div>
           <div className="bottom  flex flex-grow overflow-auto shrink ">
              {
@@ -305,16 +341,18 @@ return (
                             suppressContentEditableWarning
                             onBlur={(e) => {
                                 const updatedContent = e.target.innerText;
-                                setFileTree(prev => ({
-                                    ...prev,
-                                    [ currentFile ]: {
-                                        ...prev[ currentFile ],
-                                        content: updatedContent
-                                    }
-                                }));
+                                const ft = {
+                                  ...fileTree,
+                                  [ currentFile ]: {
+                                      file: {
+                                          contents: updatedContent
+                                      }
+                                  }
+                              }
+                              setFileTree(ft);
                             }}
                             dangerouslySetInnerHTML={{
-                              __html: hljs.highlight(fileTree[currentFile].content, { language: 'javascript', ignoreIllegals: true }).value }}
+                              __html: hljs.highlight(fileTree[currentFile].file.contents, { language: 'javascript', ignoreIllegals: true }).value }}
                             style={{
                                 whiteSpace: 'pre-wrap',
                                 paddingBottom: '25rem',
@@ -328,7 +366,6 @@ return (
           </div>
 
         </div>
-      )}
 
     </section>
 
