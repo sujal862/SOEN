@@ -249,10 +249,10 @@ return (
     </section>
 
     {/* Right Section */}
-    <section className="right flex flex-grow h-screen bg-red-50 overflow-auto">
+    <section className="right flex flex-grow h-full bg-red-50 overflow-auto">
 
       <div className='explorer h-full  max-w-64 min-w-52  bg-slate-200'>
-        <div className="file-tree w-full">
+        <div className="file-tree w-full h-full">
           {
             Object.keys(fileTree).map((file, index) => (
 
@@ -293,22 +293,37 @@ return (
               ))
             }
           </div>
-          <div className="bottom flex flex-grow">
-            {
-              fileTree[currentFile] && (
-                <textarea
-                  className='w-full h-full bg-slate-50 p-2 border-none outline-none resize-none'
-                  value={fileTree[currentFile].content}
-                  onChange={(e) => {
-                    setFileTree({
-                      ...fileTree,
-                      [currentFile]: {
-                        content: e.target.value
-                      }
-                    })
-                  }}
-                ></textarea>
-              )
+          <div className="bottom  flex flex-grow ">
+             {
+              fileTree[ currentFile ] && (
+                <div className="code-editor-area h-full overflow-auto flex-grow bg-gray-900">
+                    <pre
+                        className="hljs h-full">
+                        <code
+                            className="hljs h-full outline-none"
+                            contentEditable
+                            suppressContentEditableWarning
+                            onBlur={(e) => {
+                                const updatedContent = e.target.innerText;
+                                setFileTree(prev => ({
+                                    ...prev,
+                                    [ currentFile ]: {
+                                        ...prev[ currentFile ],
+                                        content: updatedContent
+                                    }
+                                }));
+                            }}
+                            dangerouslySetInnerHTML={{
+                              __html: hljs.highlight(fileTree[currentFile].content, { language: 'javascript', ignoreIllegals: true }).value }}
+                            style={{
+                                whiteSpace: 'pre-wrap',
+                                paddingBottom: '25rem',
+                                counterSet: 'line-numbering',
+                            }}
+                        />
+                    </pre>
+                </div>
+            )
               }
           </div>
 
@@ -316,6 +331,8 @@ return (
       )}
 
     </section>
+
+
 
 
     {/* User Selection Modal */}
