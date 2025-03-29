@@ -276,9 +276,9 @@ return (
       </div>
 
       {currentFile && (
-        <div className='code-editor flex flex-col flex-grow h-full'>
+        <div className='code-editor flex flex-col flex-grow h-full shrink'>
 
-          <div className="top flex">
+          <div className="top flex bg-gray-300">
             {
               openFiles.map((file, index) => (
                 <button key={index}
@@ -293,7 +293,7 @@ return (
               ))
             }
           </div>
-          <div className="bottom  flex flex-grow ">
+          <div className="bottom  flex flex-grow overflow-auto shrink ">
              {
               fileTree[ currentFile ] && (
                 <div className="code-editor-area h-full overflow-auto flex-grow bg-gray-900">
