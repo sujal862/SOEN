@@ -76,14 +76,14 @@ useEffect(() => {
     }
 
 
-    receiveMessage('project-message', data => {
+    receiveMessage('project-message', async data => {
 
       if (data.sender._id == 'ai') {
       const parseedMessage =  JSON.parse(data.message);
       console.log('Received message', parseedMessage);
       
-      webContainer?.mount(parseedMessage.fileTree)
       if (parseedMessage.fileTree) {
+        await webContainer?.mount(parseedMessage.fileTree)
         setFileTree(parseedMessage.fileTree);
 
       }
@@ -312,17 +312,24 @@ return (
             <div className="actions flex gap-2">
               <button
               onClick={async () => {
-                const lsProcess = await webContainer?.spawn('ls')
-                await webContainer?.mount(fileTree) // this will mount(load) the file tree to the web container
-                lsProcess.output.pipeTo(new WritableStream({
+                const installProcess = await webContainer.spawn("npm", ["install"])
+                
+                installProcess.output.pipeTo(new WritableStream({
                     write(chunk) {
-                      console.log('ls output:', chunk);
+                      console.log(chunk);
+                    }
+                }))
+                const runProcess = await webContainer.spawn("npm", ["start"])
+                
+                runProcess.output.pipeTo(new WritableStream({
+                    write(chunk) {
+                      console.log(chunk);
                     }
                 }))
               }}
-              className='p-2 px-4 bg-slate-300 text-white'
+              className='p-2 px-4 cursor-pointer bg-slate-500 text-blue-400'
               >
-                ls
+                run
               </button>
 
             </div>
