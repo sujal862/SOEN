@@ -41,6 +41,8 @@ function Project() {
   const [webContainer, setWebContainer] = useState(null);
   const [iframeUrl, setIframeUrl] = useState(null);
   const [runProcess, setRunProcess] = useState(null);
+  const [isNewFileModalOpen, setIsNewFileModalOpen] = useState(false);
+  const [newFileName, setNewFileName] = useState('');
 
 
 
@@ -208,6 +210,30 @@ const deleteFile = (file) => {
 }
 
 
+const createFile = () => {
+  if (!newFileName.trim()) return;
+
+  const updatedFileTree = {
+    ...fileTree,
+    [newFileName]: {
+      file: {
+        contents: ''
+      }
+    }
+  };
+
+  setFileTree(updatedFileTree);
+  setOpenFiles([...openFiles, newFileName]);
+  setCurrentFile(newFileName);
+  setNewFileName('');
+  setIsNewFileModalOpen(false);
+
+  // Save to backend
+  saveFileTree(updatedFileTree);
+};
+
+
+
 return (
   <main className="h-screen w-screen flex">
     <section className="left flex flex-col h-screen min-w-96 bg-gray-100 relative">
@@ -310,7 +336,16 @@ return (
 
     <section className="right flex flex-grow h-full overflow-auto">
 
-      <div className='explorer h-full  max-w-64 min-w-52  bg-slate-400'>
+      <div className='explorer h-full max-w-64 min-w-52 bg-slate-400'>
+        <div className="file-tree-header flex justify-between items-center p-2 border-b border-slate-500">
+          <h2 className="font-semibold">Files</h2>
+          <button
+            onClick={() => setIsNewFileModalOpen(true)}
+            className="p-1 hover:bg-slate-300 rounded-md"
+          >
+            <i className="ri-add-line text-xl"></i>
+          </button>
+        </div>
         <div className="file-tree w-full h-full">
           {
           Object.keys(fileTree).map((file, index) => (
@@ -523,6 +558,63 @@ return (
                 </button>
               </div>
             </div>
+          </div>
+        </div>
+      </>
+    )}
+
+
+    {/* New File Modal */}
+    {isNewFileModalOpen && (
+      <>
+        <div className="fixed inset-0 bg-gray-100 opacity-70 z-40"></div>
+        <div className="fixed inset-0 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-lg shadow-xl w-full max-w-md">
+            <div className="p-4 border-b border-gray-200">
+              <div className="flex justify-between items-center">
+                <h2 className="text-xl font-semibold text-gray-800">Create New File</h2>
+                <button
+                  onClick={() => setIsNewFileModalOpen(false)}
+                  className="text-gray-500 hover:text-gray-700"
+                >
+                  <i className="ri-close-line text-xl"></i>
+                </button>
+              </div>
+            </div>
+
+            <form onSubmit={(e) => {
+              e.preventDefault();
+              createFile();
+            }}>
+              <div className="p-4">
+                <input
+                  type="text"
+                  value={newFileName}
+                  onChange={(e) => setNewFileName(e.target.value)}
+                  placeholder="Enter file name (e.g. index.js)"
+                  className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  autoFocus
+                />
+              </div>
+
+              <div className="p-4 border-t border-gray-200">
+                <div className="flex justify-end gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setIsNewFileModalOpen(false)}
+                    className="px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 rounded-md"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 rounded-md"
+                  >
+                    Create
+                  </button>
+                </div>
+              </div>
+            </form>
           </div>
         </div>
       </>
