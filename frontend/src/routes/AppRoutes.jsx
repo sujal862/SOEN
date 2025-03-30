@@ -3,7 +3,7 @@ import { Route, BrowserRouter, Routes } from 'react-router-dom'
 import Home  from '../screens/Home'
 import Login from '../screens/Login'
 import Register from '../screens/Register'
-import Project from '../screens/project.jsx'
+import Project from '../screens/Project.jsx'
 import UserAuth from '../auth/UserAuth.jsx'
 
 const AppRoutes = () => {
