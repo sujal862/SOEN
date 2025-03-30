@@ -176,6 +176,37 @@ const saveFileTree = (ft) => {
   })
 }
 
+const deleteFile = (file) => {
+  console.log(file, project._id);
+  axios.delete('/projects/delete-file', {
+    params: {
+      projectId: project._id,
+      file
+    }
+  }).then(res => {
+    console.log(res.data);
+    if(res.data) {
+      // Remove file from fileTree
+      const updatedFileTree = { ...fileTree };
+      delete updatedFileTree[file];
+      setFileTree(updatedFileTree);
+
+      // Remove file from openFiles if it's open
+      if(openFiles.includes(file)) {
+        setOpenFiles(openFiles.filter(f => f !== file));
+      }
+
+      // If current file is the deleted file, set currentFile to null or first available file
+      if(currentFile === file) {
+        const remainingFiles = Object.keys(updatedFileTree);
+        setCurrentFile(remainingFiles.length > 0 ? remainingFiles[0] : null);
+      }
+    }
+  }).catch(err => {
+    console.log(err);
+  });
+}
+
 
 return (
   <main className="h-screen w-screen flex">
@@ -282,23 +313,27 @@ return (
       <div className='explorer h-full  max-w-64 min-w-52  bg-slate-400'>
         <div className="file-tree w-full h-full">
           {
-            Object.keys(fileTree).map((file, index) => (
-
-              <button key={index}
-                onClick={() => {
-                  setCurrentFile(file);
-                  if (!openFiles.includes(file)) {
-                    setOpenFiles([...openFiles, file]);
-                  }
-                }}
-                className="tree-element w-full p-2 px-4 flex items-center gap-2 cursor-pointer hover:bg-slate-300 rounded-md">
-                <p
-                  className='font-semibold text-lg'
-                >
-                  {file}
-                </p>
-              </button>
-            ))
+          Object.keys(fileTree).map((file, index) => (
+            <button
+              key={index}
+              onClick={() => {
+                setCurrentFile(file);
+                if (!openFiles.includes(file)) {
+                  setOpenFiles([...openFiles, file]);
+                }
+              }}
+              className="tree-element w-full p-2 px-4 flex items-center gap-2 cursor-pointer hover:bg-slate-300 rounded-md"
+            >
+              <p className="font-semibold text-lg">
+                {file}
+              </p>
+              <i 
+              className="ri-close-circle-line text-xl ml-auto hover:bg-slate-100 rounded-lg"
+              onClick={(e) => deleteFile(file)}
+              ></i>
+            </button>
+          ))
+          
           }
         </div>
       </div>

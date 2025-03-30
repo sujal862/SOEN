@@ -17,7 +17,7 @@ const projectSchema = new mongoose.Schema({
     ],
 
     fileTree: {
-        type: Object,
+        type: mongoose.Schema.Types.Mixed,
         default: {}
     },
 

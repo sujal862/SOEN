@@ -113,3 +113,31 @@ export const updateFileTree = async (req, res) => {
         res.status(400).json({ error: err.message })
     }
 }
+
+export const deleteFile = async (req, res) => {
+    const errors = validationResult(req);
+
+    if(!errors.isEmpty()) {
+        return res.status(400).json({ errors: errors.array() });
+    }
+
+    try{
+        const { projectId, file } = req.query;
+        console.log("reached ");
+
+        const project = await projectService.deleteFile({
+            projectId,
+            file
+        })
+
+        return res.status(200).json({
+            success: true,
+            project
+        });
+
+    } catch (err) {
+        console.log(err);
+        res.status(400).json({ error: err.message })
+    }
+
+}
