@@ -34,12 +34,13 @@ function Project() {
   const [message, setMessage] = useState('');
   const { user } = useUser();
   const messageBox = useRef(null);
-  const [messages, setMessages] = useState([]);
-  const [currentFile, setCurrentFile] = useState(null);
-  const [openFiles, setOpenFiles] = useState([]);
+  const [messages, setMessages] = useState([]);  // All Messages 
+  const [currentFile, setCurrentFile] = useState(null); //selected file
+  const [openFiles, setOpenFiles] = useState([]);  //Opened files
   const [fileTree, setFileTree] = useState({});
-
   const [webContainer, setWebContainer] = useState(null);
+  const [iframeUrl, setIframeUrl] = useState(null);
+  const [runProcess, setRunProcess] = useState(null);
 
 
 
@@ -48,6 +49,7 @@ useEffect(() => {
   axios.get(`/projects/get-project/${projectId}`)
     .then((res) => {
       setProject(res.data.project);
+      setFileTree(res.data.project.fileTree);
     })
     .catch((err) => {
       console.log(err);
@@ -80,14 +82,14 @@ useEffect(() => {
 
       if (data.sender._id == 'ai') {
       const parseedMessage =  JSON.parse(data.message);
-      console.log('Received message', parseedMessage);
       
       if (parseedMessage.fileTree) {
         await webContainer?.mount(parseedMessage.fileTree)
         setFileTree(parseedMessage.fileTree);
-
+        
       }
-      }
+    }
+      console.log('Received message', data.message);
       setMessages(prev => [...prev, { ...data, type: 'incoming' }]);
       scrollToBottom();
     });
@@ -161,6 +163,17 @@ function WriteAiMessage(message) {
         }}
       />
     </div>)
+}
+
+const saveFileTree = (ft) => {
+  axios.put('/projects/update-file-tree', {
+    projectId: project._id,
+    fileTree: ft
+  }).then(res => {
+    console.log(res.data)
+  }).catch(err => {
+    console.log(err);
+  })
 }
 
 
@@ -262,6 +275,8 @@ return (
     </section>
 
     {/* Right Section */}
+    { fileTree && (
+
     <section className="right flex flex-grow h-full overflow-auto">
 
       <div className='explorer h-full  max-w-64 min-w-52  bg-slate-400'>
@@ -312,6 +327,7 @@ return (
             <div className="actions flex gap-2">
               <button
               onClick={async () => {
+                await webContainer.mount(fileTree);
                 const installProcess = await webContainer.spawn("npm", ["install"])
                 
                 installProcess.output.pipeTo(new WritableStream({
@@ -319,13 +335,27 @@ return (
                       console.log(chunk);
                     }
                 }))
-                const runProcess = await webContainer.spawn("npm", ["start"])
+
+                if(runProcess) {
+                  runProcess.kill();
+                  setRunProcess(null);
+                }
+
+                let tempRunProcess = await webContainer.spawn("npm", ["start"])
                 
-                runProcess.output.pipeTo(new WritableStream({
+                tempRunProcess.output.pipeTo(new WritableStream({
                     write(chunk) {
                       console.log(chunk);
                     }
                 }))
+
+                setRunProcess(tempRunProcess);
+
+                webContainer.on('server-ready', (port, url) => {
+                  console.log('Server is running at port:' ,port, url);
+                  setIframeUrl(url);
+                })
+
               }}
               className='p-2 px-4 cursor-pointer bg-slate-500 text-blue-400'
               >
@@ -357,6 +387,7 @@ return (
                                   }
                               }
                               setFileTree(ft);
+                              saveFileTree(ft);
                             }}
                             dangerouslySetInnerHTML={{
                               __html: hljs.highlight(fileTree[currentFile].file.contents, { language: 'javascript', ignoreIllegals: true }).value }}
@@ -374,7 +405,24 @@ return (
 
         </div>
 
+        { iframeUrl && webContainer &&
+            <div className='flex flex-col h-full min-w-96 bg-slate-300'>
+
+              <div className='address-bar'>
+                <input type="text"
+                onChange={(e) => setIframeUrl(e.target.value)}
+                value={iframeUrl}
+                className='outline-none w-full p-2 px-4 bg-slate-400 text-blue-100'
+                />
+
+              </div>
+            <iframe src={iframeUrl} className='w-full h-full'></iframe>
+            </div>
+        }
+
     </section>
+
+      )}
 
 
 
