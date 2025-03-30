@@ -5,11 +5,24 @@ import { useNavigate } from 'react-router-dom';
 
 export default function Home() {
 
-  const { user } = useUser();
+  const { user, setUser } = useUser();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [projectName, setProjectName] = useState('');
   const [project, setProject] = useState([]);
   const navigate = useNavigate();
+  
+
+  useEffect(() => { // get all projects of logged in user
+
+    axios.get('/projects/all').then((res) => {
+      setProject(res.data.projects);
+
+    }).catch(err => {
+      console.log(err);
+    })
+
+  }, [])
+
 
   function createProject(e) {
     e.preventDefault();
@@ -26,22 +39,34 @@ export default function Home() {
       .catch((err) => {
         console.log(err);
       });
-    console.log('Created Project :',projectName);
+    console.log('Project Created :',projectName);
   }
 
-  useEffect(() => { // get all projects of logged in user
-
-    axios.get('/projects/all').then((res) => {
-      setProject(res.data.projects);
-
-    }).catch(err => {
-      console.log(err);
-    })
-
-  }, [])
+  const handleLogout = async () => {
+    try {
+      await axios.get('/users/logout' );
+      localStorage.removeItem('token');
+      setUser(null);
+      navigate('/login');
+    } catch (error) {
+      console.error('Logout failed:', error);
+    }
+  };
+  
 
   return (
     <main className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-6">
+      {/* Logout Button */}
+      <div className="fixed top-6 right-6 z-10">
+        <button
+          onClick={handleLogout}
+          className="px-4 py-2 rounded-lg cursor-pointer bg-white/80 backdrop-blur-sm border border-gray-200 shadow-sm hover:bg-white/90 hover:shadow-md transition-all duration-200 flex items-center gap-2 text-gray-700 hover:text-gray-900"
+        >
+          <i className="ri-logout-box-line"></i>
+          <span>Logout</span>
+        </button>
+      </div>
+
       <div className="max-w-7xl mx-auto">
         <h1 className="text-3xl font-bold text-gray-800 mb-8">My Projects</h1>
         
