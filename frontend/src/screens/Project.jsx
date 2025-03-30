@@ -241,42 +241,43 @@ const createFile = () => {
 
 
 return (
-  <main className="h-screen w-screen flex">
-    <section className="left flex flex-col h-screen min-w-96 bg-gray-100 relative">
-      {/* Header */}
-      <header className="flex justify-between items-center p-2 px-4 w-full absolute bg-gray-200 top-0 left-0 right-0 z-10">
+  <main className="h-screen w-screen flex bg-gradient-to-br from-gray-50 to-blue-50">
+    {/* Left Section */}
+    <section className={`left flex flex-col h-screen ${!fileTree || Object.keys(fileTree).length === 0 ? 'w-full' : 'min-w-96'} bg-white/80 backdrop-blur-sm shadow-lg relative`}>
+    {/* Header */}
+      <header className="flex justify-between items-center p-3 px-4 w-full absolute bg-white/90 backdrop-blur-sm border-b border-gray-200 z-10">
         <button
-          className="flex gap-2 items-center hover:bg-gray-300 px-2 py-1 rounded-md"
+          className="flex gap-2 items-center hover:bg-blue-50 px-3 py-2 rounded-lg transition-all duration-300"
           onClick={() => setIsModalOpen(true)}
         >
-          <i className="ri-add-fill mr-1"></i>
-          <p>Add collaborator</p>
+          <i className="ri-add-fill text-blue-600"></i>
+          <p className="text-gray-700">Add collaborator</p>
         </button>
 
         <button
-          className="p-2 text-gray-700 cursor-pointer hover:text-gray-900"
+          className="p-2 text-gray-600 hover:text-blue-600 rounded-lg transition-all duration-300"
           onClick={() => {
             console.log('clicked');
             setIsSidePanelOpen(!isSidePanelOpen)
           }}
         >
-          <i className="ri-group-fill"></i>
+          <i className="ri-group-fill text-xl"></i>
         </button>
       </header>
 
       {/* Conversation Area */}
-      <div className="conversation-area flex flex-col h-screen pt-14 pb-16">
-        <div className="flex-grow flex flex-col overflow-hidden">
+      <div className="conversation-area flex flex-col h-screen pt-16 pb-20">
+        <div className="flex-grow flex flex-col overflow-hidden p-4">
           <div
             ref={messageBox}
-            className="message-box flex-grow overflow-y-auto bg-gray-300 border border-gray-300 rounded-md p-2 gap-1"
+            className="message-box flex-grow overflow-y-auto space-y-3 pr-2"
           >
             {messages.map((msg, index) => (
               <div
                 key={index}
-                className={`${msg.type === 'outgoing' ? 'ml-auto' : ''} ${msg.sender._id === 'ai' ? 'max-w-80' : 'max-w-56'} flex flex-col p-2 mb-2 bg-white w-fit rounded-md`}
+                className={`${msg.type === 'outgoing' ? 'ml-auto' : ''} ${msg.sender._id === 'ai' ? 'max-w-80' : 'max-w-56'} flex flex-col p-3 rounded-xl shadow-sm ${msg.type === 'outgoing' ? 'bg-blue-600 text-white' : 'bg-white border border-gray-200'}`}
               >
-                <small className="opacity-65 text-xs">
+                <small className="opacity-75 text-xs mb-1">
                   {msg.sender.email}
                 </small>
                 {msg.sender._id === 'ai' ? (
@@ -289,51 +290,53 @@ return (
           </div>
         </div>
 
-        <div className="inputField w-full flex items-center absolute bottom-0 left-0 right-0 bg-white p-2">
-          <input
-            className="p-2 px-4 flex-grow border-none outline-none"
-            type="text"
-            value={message}
-            onChange={(e) => setMessage(e.target.value)}
-            placeholder="Enter message"
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' && !e.shiftKey) {
-                e.preventDefault();
-                send();
-              }
-            }}
-          />
-          <button
-            className="p-2 px-4 bg-blue-600 text-white hover:bg-blue-700"
-            onClick={send}
-          >
-            <i className="ri-send-plane-fill"></i>
-          </button>
+        <div className="inputField absolute bottom-0 left-0 right-0 p-4 bg-white/80 backdrop-blur-sm border-t border-gray-100">
+          <div className="flex gap-2 bg-white rounded-lg shadow-sm">
+            <input
+              className="flex-grow p-3 rounded-l-lg focus:outline-none"
+              type="text"
+              value={message}
+              onChange={(e) => setMessage(e.target.value)}
+              placeholder="Type your message..."
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                  e.preventDefault();
+                  send();
+                }
+              }}
+            />
+            <button
+              className="p-3 text-white bg-blue-600 hover:bg-blue-700 rounded-r-lg transition-colors duration-300"
+              onClick={send}
+            >
+              <i className="ri-send-plane-fill"></i>
+            </button>
+          </div>
         </div>
       </div>
 
       {/* Side Panel */}
-      <div className={`sidePanel w-full h-full flex flex-col gap-2 bg-slate-50 absolute transition-all duration-300 ease-in-out ${isSidePanelOpen ? 'translate-x-0' : '-translate-x-full'} top-0`}>
-        <header className="flex justify-between items-center p-2 px-4 w-full bg-gray-200">
-          <h1 className="font-semibold">Collaborators</h1>
+      <div className={`sidePanel w-full h-full flex flex-col gap-2 bg-white/95 backdrop-blur-md shadow-2xl absolute transition-transform duration-300 ease-in-out ${isSidePanelOpen ? 'translate-x-0' : '-translate-x-full'} top-0 z-50`}>
+        <header className="flex justify-between items-center p-4 bg-white border-b border-gray-100">
+          <h1 className="font-semibold text-gray-800">Collaborators</h1>
           <button
             onClick={() => setIsSidePanelOpen(!isSidePanelOpen)}
-            className="p-2 text-gray-700 cursor-pointer hover:text-gray-900"
+            className="p-2 text-gray-600 hover:text-blue-600 rounded-lg transition-colors"
           >
-            <i className="ri-close-line font-bold"></i>
+            <i className="ri-close-line text-xl"></i>
           </button>
         </header>
 
-        <div className="user-list flex flex-col gap-2 p-2">
+        <div className="user-list flex flex-col gap-3 p-4">
           {project.users && project.users.map(user => (
             <div
               key={user._id}
-              className="user flex cursor-pointer hover:bg-gray-200 gap-2 p-1 items-center"
+              className="user flex items-center gap-3 p-3 rounded-lg hover:bg-blue-50 transition-colors"
             >
-              <div className="aspect-square w-fit h-fit rounded-full flex justify-center items-center p-4 bg-gray-500">
-                <i className="ri-user-fill text-white absolute"></i>
+              <div className="aspect-square w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center">
+                <i className="ri-user-fill text-blue-600"></i>
               </div>
-              <h1 className="font-semibold tex-lg">{user.email}</h1>
+              <h1 className="font-medium text-gray-700">{user.email}</h1>
             </div>
           ))}
         </div>
@@ -346,7 +349,7 @@ return (
     {/* Right Section */}
     { fileTree && Object.keys(fileTree).length > 0 && (
 
-    <section className="right flex flex-grow h-full overflow-auto">
+    <section className="right flex flex-grow h-full overflow-hidden">
 
       <div className='explorer h-full max-w-64 min-w-52 bg-slate-400'>
         <div className="file-tree-header flex justify-between items-center p-2 border-b border-slate-500">
