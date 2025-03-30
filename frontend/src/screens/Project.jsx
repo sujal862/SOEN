@@ -191,17 +191,23 @@ const deleteFile = (file) => {
       // Remove file from fileTree
       const updatedFileTree = { ...fileTree };
       delete updatedFileTree[file];
-      setFileTree(updatedFileTree);
 
-      // Remove file from openFiles if it's open
-      if(openFiles.includes(file)) {
-        setOpenFiles(openFiles.filter(f => f !== file));
-      }
-
-      // If current file is the deleted file, set currentFile to null or first available file
-      if(currentFile === file) {
-        const remainingFiles = Object.keys(updatedFileTree);
-        setCurrentFile(remainingFiles.length > 0 ? remainingFiles[0] : null);
+      
+      if (Object.keys(updatedFileTree).length === 0) { // if fileTree is empty
+        setFileTree({});
+        setOpenFiles([]);
+        setCurrentFile(null);
+      } else {
+        setFileTree(updatedFileTree);
+        // Remove file from openFiles if it's open
+        if(openFiles.includes(file)) {
+          setOpenFiles(openFiles.filter(f => f !== file));
+        }
+        // If current file is the deleted file, set currentFile to first available file
+        if(currentFile === file) {
+          const remainingFiles = Object.keys(updatedFileTree);
+          setCurrentFile(remainingFiles.length > 0 ? remainingFiles[0] : null);
+        }
       }
     }
   }).catch(err => {
@@ -290,6 +296,12 @@ return (
             value={message}
             onChange={(e) => setMessage(e.target.value)}
             placeholder="Enter message"
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                send();
+              }
+            }}
           />
           <button
             className="p-2 px-4 bg-blue-600 text-white hover:bg-blue-700"
@@ -332,7 +344,7 @@ return (
     </section>
 
     {/* Right Section */}
-    { fileTree && (
+    { fileTree && Object.keys(fileTree).length > 0 && (
 
     <section className="right flex flex-grow h-full overflow-auto">
 
