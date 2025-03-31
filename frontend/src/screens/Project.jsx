@@ -64,7 +64,7 @@ function Project() {
       .catch((err) => {
         console.log(err);
       });
-  }, []);
+  }, [project._id]);
 
 
   useEffect(() => {
