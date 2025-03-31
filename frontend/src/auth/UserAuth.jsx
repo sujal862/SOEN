@@ -37,9 +37,21 @@ const UserAuth = ({ children }) => {
     }, []); // Run once on component mount
     
 
+
     if (loading) {
-        return <div>Loading...</div>;
+        return (
+            <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-r from-blue-500 to-purple-600">
+                <div className="w-16 h-16 border-4 border-white border-t-transparent rounded-full animate-spin mb-4"></div>
+                <div className="text-white text-xl font-semibold tracking-wider">
+                    <span className="animate-pulse">Please wait</span>
+                    <span className="animate-bounce inline-block ml-1">.</span>
+                    <span className="animate-bounce inline-block ml-1 delay-100">.</span>
+                    <span className="animate-bounce inline-block ml-1 delay-200">.</span>
+                </div>
+            </div>
+        );
     }
+    
 
     return <>{children}</>;
 };
